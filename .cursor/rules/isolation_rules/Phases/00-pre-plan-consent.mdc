@@ -1,0 +1,101 @@
+---
+description: Pre-plan consent gate for user priority validation
+globs: "**/plan*/**", "**/PLAN*/**"
+alwaysApply: false
+---
+
+# PRE-PLAN CONSENT GATE
+
+Before producing any plan:
+1) Re-read memory-bank/activeContext.md and progress.md.
+2) If activeContext.md has "User Priorities (authoritative)", treat them as hard constraints.
+3) Check front-matter flags:
+   - require_user_review: true  -> STOP and ask the user 3–5 focused questions; do not plan yet.
+   - last_updated: YYYY-MM-DD   -> If >7 days old, refresh priorities with questions.
+4) After user reply, update Memory Bank (activeContext.md, tasks.md, progress.md), then proceed.
+5) Log conflicts in progress.md#Decision Log with rationale.
+
+## CONSENT CHECK PROTOCOL
+
+```mermaid
+graph TD
+    Start["PLAN Mode Triggered"] --> CheckMB["Check Memory Bank Files"]
+    CheckMB --> HasPriorities{"User Priorities<br>Exist?"}
+    
+    HasPriorities -->|"Yes"| CheckFlags["Check Front-matter Flags"]
+    HasPriorities -->|"No"| AskPriorities["Ask User for Priorities"]
+    
+    CheckFlags --> RequireReview{"require_user_review:<br>true?"}
+    RequireReview -->|"Yes"| AskQuestions["Ask 3-5 Focused Questions"]
+    RequireReview -->|"No"| CheckAge["Check last_updated Date"]
+    
+    CheckAge --> IsOld{">7 days old?"}
+    IsOld -->|"Yes"| RefreshPriorities["Refresh Priorities"]
+    IsOld -->|"No"| ProceedPlan["Proceed with Planning"]
+    
+    AskPriorities --> UpdateMB["Update Memory Bank"]
+    AskQuestions --> UpdateMB
+    RefreshPriorities --> UpdateMB
+    UpdateMB --> ProceedPlan
+    
+    style Start fill:#4da6ff,stroke:#0066cc,color:white
+    style HasPriorities fill:#ffa64d,stroke:#cc7a30,color:white
+    style RequireReview fill:#d94dbb,stroke:#a3378a,color:white
+    style ProceedPlan fill:#4dbb5f,stroke:#36873f,color:white
+```
+
+## USER QUESTIONS TEMPLATE
+
+When require_user_review: true, ask these focused questions:
+
+1. **Primary Goal**: What is your main objective for this task?
+2. **Constraints**: Are there any technical, time, or resource constraints I should know about?
+3. **Scope Preferences**: Do you prefer a minimal viable solution or comprehensive implementation?
+4. **Priority Areas**: Which aspects are most critical to get right?
+5. **Success Criteria**: How will you know this task is complete and successful?
+
+## MEMORY BANK UPDATE PROTOCOL
+
+After receiving user responses:
+1. Update activeContext.md with "User Priorities (authoritative)" section
+2. Set require_user_review: false in front-matter
+3. Update last_updated: YYYY-MM-DD
+4. Log decision rationale in progress.md#Decision Log
+5. Proceed with PLAN mode execution
+
+## IMPLEMENTATION STEPS
+
+### Step 1: Check Memory Bank Status
+```
+read_file({
+  target_file: "memory-bank/activeContext.md",
+  should_read_entire_file: true
+})
+
+read_file({
+  target_file: "memory-bank/progress.md",
+  should_read_entire_file: true
+})
+```
+
+### Step 2: Evaluate Consent Requirements
+Based on Memory Bank content:
+- If no "User Priorities (authoritative)" section exists → Ask for priorities
+- If require_user_review: true → Ask focused questions
+- If last_updated > 7 days → Refresh priorities
+- Otherwise → Proceed with planning
+
+### Step 3: Handle User Interaction
+When user input is required:
+1. Present focused questions based on template
+2. Wait for user responses
+3. Update Memory Bank files
+4. Set appropriate flags
+5. Continue with PLAN mode execution
+
+### Step 4: Log Decisions
+Always document in progress.md#Decision Log:
+- Why consent was required
+- User responses received
+- Decisions made based on priorities
+- Rationale for proceeding with planning

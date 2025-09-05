@@ -1,0 +1,120 @@
+---
+description: Memory Bank precedence rule for user priority enforcement
+globs: "**/plan*/**", "**/PLAN*/**", "**/creative*/**", "**/CREATIVE*/**"
+alwaysApply: false
+---
+
+# MEMORY BANK PRECEDENCE
+
+When "User Priorities (authoritative)" exist in memory-bank/activeContext.md,
+plans MUST align with them. If a conflict is found, document it in
+progress.md#Decision Log and propose alternatives; do not silently ignore.
+
+## PRECEDENCE ENFORCEMENT
+
+```mermaid
+graph TD
+    Plan["Plan Generation"] --> CheckPriorities["Check User Priorities"]
+    CheckPriorities --> HasPriorities{"User Priorities<br>Exist?"}
+    
+    HasPriorities -->|"Yes"| AlignPlan["Align Plan with Priorities"]
+    HasPriorities -->|"No"| GeneratePlan["Generate Standard Plan"]
+    
+    AlignPlan --> ConflictCheck{"Plan Conflicts<br>with Priorities?"}
+    ConflictCheck -->|"Yes"| DocumentConflict["Document in Decision Log"]
+    ConflictCheck -->|"No"| ProceedPlan["Proceed with Aligned Plan"]
+    
+    DocumentConflict --> ProposeAlternatives["Propose Alternative Approaches"]
+    ProposeAlternatives --> UserChoice["Wait for User Decision"]
+    
+    style Plan fill:#4da6ff,stroke:#0066cc,color:white
+    style HasPriorities fill:#ffa64d,stroke:#cc7a30,color:white
+    style ConflictCheck fill:#d94dbb,stroke:#a3378a,color:white
+    style ProceedPlan fill:#4dbb5f,stroke:#36873f,color:white
+```
+
+## CONFLICT RESOLUTION PROTOCOL
+
+When conflicts are detected:
+1. **Document the conflict** in progress.md#Decision Log with:
+   - Original plan approach
+   - User priority that conflicts
+   - Rationale for the conflict
+2. **Propose alternatives** that respect user priorities
+3. **Wait for user decision** before proceeding
+4. **Update Memory Bank** with final decision and rationale
+
+## IMPLEMENTATION STEPS
+
+### Step 1: Read User Priorities
+```
+read_file({
+  target_file: "memory-bank/activeContext.md",
+  should_read_entire_file: true
+})
+```
+
+### Step 2: Check for Priority Section
+Look for "User Priorities (authoritative)" section in activeContext.md:
+- If exists → Apply precedence rules
+- If not exists → Proceed with standard planning
+
+### Step 3: Align Plan with Priorities
+When priorities exist:
+1. Review each planned component against user priorities
+2. Identify any conflicts or misalignments
+3. Adjust plan to respect user priorities
+4. Document any necessary compromises
+
+### Step 4: Handle Conflicts
+When conflicts are found:
+1. Document in progress.md#Decision Log:
+   ```
+   ## Decision Log
+   
+   ### [Date] - Priority Conflict Resolution
+   **Conflict**: [Description of conflict]
+   **User Priority**: [Relevant user priority]
+   **Original Plan**: [What was originally planned]
+   **Resolution**: [How conflict was resolved]
+   **Rationale**: [Why this resolution was chosen]
+   ```
+2. Propose alternative approaches
+3. Wait for user confirmation before proceeding
+
+### Step 5: Update Memory Bank
+After resolving conflicts:
+1. Update tasks.md with final plan
+2. Update progress.md with decision log entry
+3. Ensure all changes align with user priorities
+
+## PRIORITY ALIGNMENT CHECKLIST
+
+Before finalizing any plan, verify:
+- [ ] All planned components serve user-stated goals
+- [ ] No planned components violate user constraints
+- [ ] Scope matches user preferences (minimal vs comprehensive)
+- [ ] Priority areas receive appropriate focus
+- [ ] Success criteria are addressed in the plan
+- [ ] Any conflicts are documented and resolved
+
+## EXAMPLE CONFLICT RESOLUTION
+
+**Scenario**: User wants minimal implementation, but plan includes comprehensive features
+
+**Conflict Documentation**:
+```
+### 2025-01-01 - Scope Preference Conflict
+**Conflict**: Plan includes comprehensive authentication system, user prefers minimal implementation
+**User Priority**: "Minimal viable solution preferred"
+**Original Plan**: Full authentication with OAuth, email verification, password reset
+**Resolution**: Simplified authentication with basic login/logout only
+**Rationale**: User explicitly stated preference for minimal approach, comprehensive features can be added later
+```
+
+**Alternative Proposals**:
+1. **Minimal Approach**: Basic username/password authentication only
+2. **Hybrid Approach**: Core authentication with one OAuth provider
+3. **Phased Approach**: Start minimal, add features incrementally
+
+**User Decision Required**: Which approach aligns best with your priorities?
